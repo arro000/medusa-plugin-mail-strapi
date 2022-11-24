@@ -1,11 +1,11 @@
 {
     "name": "medusa-plugin-mail-strapi",
     "version": "0.1.4",
-    "description": "A notification service based on nodemailer for medusajs",
+    "description": "A notification service based on strapi mail api for medusajs",
     "main": "index.js",
     "repository": {
         "type": "git",
-        "url": "github:blechlawine/medusa-plugin-nodemailer"
+        "url": "https://github.com/arro000/medusa-plugin-mail-strapi"
     },
     "scripts": {
         "build": "babel src -d .",
@@ -35,7 +35,6 @@
         "express": "^4.17.1",
         "medusa-core-utils": "^1.1.30",
         "medusa-interfaces": "1.x",
-        "nodemailer": "^6.7.2",
         "pug": "^3.0.2",
         "typeorm": "^0.3.10"
     }
