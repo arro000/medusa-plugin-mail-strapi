@@ -10,7 +10,6 @@ class NodemailerService extends NotificationService {
     config
   ) {
     super();
-    console.log("mailer");
     this.config = {
       strapiApiKey: "",
       strapiUri: "",
