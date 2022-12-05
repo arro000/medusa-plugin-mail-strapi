@@ -14,11 +14,9 @@ class NodemailerService extends NotificationService {
       strapiApiKey: "",
       strapiUri: "",
       fromEmail: "noreply@medusajs.com",
-      transport: {
-        sendmail: true,
-        path: "/usr/sbin/sendmail",
-        newline: "unix",
-      },
+      defaultBcc: "",
+      defaultCc: "",
+      replyTo: "",
       emailTemplatePath: "data/emailTemplates",
       templateMap: {
         "order.placed": "orderplaced",
@@ -42,7 +40,15 @@ class NodemailerService extends NotificationService {
       replyTo,
       subject,
     };
-
+    if (!body.bcc && this.config.defaultBcc !== "") {
+      body.bcc = this.config.defaultBcc;
+    }
+    if (!body.cc && this.config.defaultCc !== "") {
+      body.cc = this.config.defaultCc;
+    }
+    if (!body.replyTo && this.config.replyTo !== "") {
+      body.replyTo = this.config.replyTo;
+    }
     return new Promise((resolve, reject) => {
       fetch(this.config.strapiUri + "/api/email", {
         method: "post",
@@ -62,10 +68,42 @@ class NodemailerService extends NotificationService {
         });
     });
   }
-  async sendNotification(eventName, eventData, attachmentGenerator) {
-    let emailData = await this.retrieveData(eventName, eventData);
+
+  async getMailBody(email, templateName, emailData) {
+    let renderedHtml = "";
     if (emailData) {
-      let templateName = this.getTemplateNameForEvent(eventName);
+      renderedHtml = await email.render(templateName, {
+        data: emailData.data,
+        env: process.env,
+      });
+    } else {
+      renderedHtml = await email.render(templateName, {
+        data: {},
+        env: process.env,
+      });
+    }
+    return renderedHtml;
+  }
+  async getMailSubject(email, templateName, emailData) {
+    templateName = templateName + "/subject";
+    let renderedHtml = "";
+    if (emailData) {
+      renderedHtml = await email.render(templateName, {
+        data: emailData.data,
+        env: process.env,
+      });
+    } else {
+      renderedHtml = await email.render(templateName, {
+        data: {},
+        env: process.env,
+      });
+    }
+    return renderedHtml;
+  }
+
+  async sendNotification(eventName, eventData, attachmentGenerator) {
+    let templateName = this.getTemplateNameForEvent(eventName);
+    if (templateName) {
       const email = new Email({
         message: {
           from: this.config.fromEmail,
@@ -75,33 +113,23 @@ class NodemailerService extends NotificationService {
         },
         send: true,
       });
-      let renderedHtml = await email.render(templateName, {
-        data: emailData.data,
-        env: process.env,
-      });
+      let emailData = await this.retrieveData(eventName, eventData);
+      let renderedHtml = await this.getMailBody(email, templateName, emailData);
+      let renderedSubject = await this.getMailSubject(
+        email,
+        templateName,
+        emailData
+      );
+
       const status = await this.sendMail({
         from: this.config.fromEmail,
         to: emailData.to,
 
         html: renderedHtml,
 
-        subject: "test",
+        subject: renderedSubject,
       });
-      // }) await email
-      //   .send({
-      //     template: templateName,
-      //     message: {
-      //       to: emailData.to,
-      //     },
-      //     locals: {
-      //       data: emailData.data,
-      //       env: process.env,
-      //     },
-      //   })
-      //   .then(() => "sent")
-      //   .catch((err) => {
-      //     throw err;
-      //   });
+
       return {
         to: emailData.to,
         status,
@@ -114,6 +142,7 @@ class NodemailerService extends NotificationService {
   }
 
   async resendNotification(notification, config, attachmentGenerator) {
+    //get template
     let templateName = this.getTemplateNameForEvent(notification.event_name);
     if (templateName) {
       const email = new Email({
@@ -125,31 +154,27 @@ class NodemailerService extends NotificationService {
         },
         send: true,
       });
-      let renderedHtml = await email.render(templateName, {
-        data: emailData.data,
-        env: process.env,
-      });
+      //get data
+      let emailData = await this.retrieveData(
+        notification.event_name,
+        notification.data
+      );
+      let renderedHtml = await this.getMailBody(email, templateName, emailData);
+      let renderedSubject = await this.getMailSubject(
+        email,
+        templateName,
+        emailData
+      );
+
       const status = await this.sendMail({
         from: this.config.fromEmail,
         to: notification.to,
 
         html: renderedHtml,
 
-        subject: "test",
+        subject: renderedSubject,
       });
-      // const status = await email
-      //   .send({
-      //     template: templateName,
-      //     message: {
-      //       to: notification.to,
-      //     },
-      //     locals: {
-      //       data: notification.data,
-      //       env: process.env,
-      //     },
-      //   })
-      //   .then(() => "sent")
-      //   .catch(() => "failed");
+
       return {
         to: notification.to,
         status,

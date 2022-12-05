@@ -6,6 +6,17 @@ A notification service based on strapi mail api
 
 It uses the email-templates npm package and pug for rendering html emails. Documentation for this can be found here: [https://github.com/forwardemail/email-templates](https://github.com/forwardemail/email-templates)
 
+The folder structure for the template is
+
+```
+emailTemplatePath/  
+│
+└─── templateMap.value/
+    │   index.pug    # html body for the mail
+    │   subject.pug  # the string subject of mail
+
+```
+
 You need a Strapi instance as CMS  
 
 ## Available options (default configuration)
@@ -28,5 +39,11 @@ You need a Strapi instance as CMS
         "order.placed": "orderplaced",
         "invite.created": "invitemember",
       },
+
+
+      //optionals 
+      replyTo:""
+      defaultBcc:"",
+      defaultCc:"",
 }
 ```
