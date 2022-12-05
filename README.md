@@ -42,8 +42,11 @@ You need a Strapi instance as CMS
 
 
       //optionals 
-      replyTo:""
+      
+      replyTo:"", 
+      //bcc always added to all mails
       defaultBcc:"",
+      //cc always added to all mails
       defaultCc:"",
 }
 ```
