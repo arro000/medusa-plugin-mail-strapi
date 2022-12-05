@@ -1,6 +1,6 @@
 {
   "name": "medusa-plugin-mail-strapi",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A notification service based on strapi mail api for medusajs",
   "main": "index.js",
   "repository": {
